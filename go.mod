@@ -1,4 +1,4 @@
-module xlsx2json
+module github.com/dingqinghui/xlsx2json
 
 go 1.21
 

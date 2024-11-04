@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	. "github.com/dingqinghui/xlsx2json/src"
 	"log"
-	. "xlsx2json/src"
 )
 
 func main() {
