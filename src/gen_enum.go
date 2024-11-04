@@ -36,8 +36,7 @@ func GenEnumGoCode() {
 		return cmp.Compare(a, b)
 	})
 	for _, k := range keys {
-		m := enums[k]
-		metas := maputil.Values(m)
+		metas := enums[k]
 		slices.SortFunc(metas, func(a, b *fieldMeta) int {
 			return cmp.Compare(cast.ToInt32(a.DataDefault), cast.ToInt32(b.DataDefault))
 		})

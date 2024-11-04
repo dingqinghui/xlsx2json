@@ -217,3 +217,22 @@ func isAnnotateTag(s string) bool {
 func isStructMetaSheet(s string) bool {
 	return strings.HasPrefix(s, structMetaSheet)
 }
+
+func CamelStr(str string) string {
+	// 如果有 - 链接,统一将其替换为 _
+	if strings.IndexByte(str, '-') != -1 {
+		str = strings.Replace(str, "-", "_", -1)
+	}
+	//按下划线切割字符串为单词
+	tmp := strings.Split(str, "_")
+	for i, w := range tmp {
+		// 判断第一个单词字母是否为小写字母
+		if w[0] >= 'a' && w[0] <= 'z' {
+			// 这个地方的 w[0]-32 即将单词的第一个字母转换为大写.
+			// 利用ascii码值差来转换, 小写字母的ascii码值比大写字母的ascii码值大32
+			tmp[i] = fmt.Sprintf("%v%v", string(w[0]-32), string(w[1:]))
+		}
+		// 单词首字母非大写字母的情况不需要处理
+	}
+	return strings.Join(tmp, "") // 将切片拼接为字符串后返回
+}

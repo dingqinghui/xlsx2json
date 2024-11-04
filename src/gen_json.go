@@ -14,6 +14,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"log"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -37,7 +38,7 @@ func xlsxSheet2Json(filePath string, wait *sync.WaitGroup, escapeChar bool) {
 	}
 	xlsx, err := excelize.OpenFile(filePath)
 	if err != nil {
-		log.Fatal("xlsxSheet2Json", filePath, err)
+		log.Println("xlsxSheet2Json", filePath, err)
 		return
 	}
 	// 遍历所有表单
@@ -58,7 +59,7 @@ func xlsxSheet2Json(filePath string, wait *sync.WaitGroup, escapeChar bool) {
 func sheetToJsonFile(xlsx *excelize.File, sheet string, outputPath string, escapeChar bool) {
 	rows, _ := xlsx.GetRows(sheet)
 	if len(rows) <= 2 {
-		log.Fatal(sheet, errSheetRowCnt)
+		log.Println(sheet, errSheetRowCnt)
 		return
 	}
 	// 表格第一行，第一列元素，以#开头，跳过该表格
@@ -84,13 +85,17 @@ func sheetToJsonFile(xlsx *excelize.File, sheet string, outputPath string, escap
 		log.Fatal(filename, err)
 		return
 	}
-	log.Println("json文件生成成功", outputPath)
+	//log.Println("json文件生成成功", filename)
 }
 
 func tableRow2Json(sheet string, row int, rowData []string, fieldDict map[int]*fieldMeta) (*gabs.Container, bool) {
 	have := false
 	gObj := gabs.New()
 	for idx, colCell := range rowData {
+		colCell = strings.TrimSpace(colCell)
+		if colCell == "" {
+			continue
+		}
 		// 跳过注释
 		if colCell != "" && (isAnnotateTag(colCell) && idx == 0) {
 			break
@@ -99,7 +104,7 @@ func tableRow2Json(sheet string, row int, rowData []string, fieldDict map[int]*f
 		if !ok {
 			continue
 		}
-		v := Cast(columnMeta, colCell)
+		v := Cast(sheet, row, idx, columnMeta, colCell)
 		if _, err := gObj.SetP(v, columnMeta.ObjName); err != nil {
 			log.Fatalf("列转换失败 %v row:%v column：%v data:%v err:%v\n", sheet, row, idx, colCell, err)
 			return nil, false

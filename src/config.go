@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 type Config struct {
@@ -41,7 +40,7 @@ type Config struct {
 var Cfg = new(Config)
 
 func InitConfig(path string) {
-	data, err := os.ReadFile(filepath.Join(path, "config.json"))
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal("读取配置文件失败", path, err)
 		return

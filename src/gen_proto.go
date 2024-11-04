@@ -93,6 +93,7 @@ func genProtoFile(mp map[string]map[string]*fieldMeta) (data []string) {
 }
 
 func createProtoMessage(fileName string, fieldList []*protoField) []string {
+	fileName = CamelStr(fileName)
 	var data []string
 	data = append(data, "//"+fileName)
 	data = append(data, "message "+fileName+"\n{")

@@ -47,7 +47,8 @@ func (v *StaticBeanData) Load{{$v.Name}}(path string) {
 	}
 	v.{{$v.Name}}Dict =  {{$v.Name}}Dict
 	v.{{$v.Name}}Array = {{$v.Name}}Array
-{{end}}}
+}
+{{end}}
 
 
 func (v *StaticBeanData) LoadAll(path string){

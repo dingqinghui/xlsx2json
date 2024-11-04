@@ -15,20 +15,24 @@ import (
 	"strings"
 )
 
-func Cast(meta *fieldMeta, v string) interface{} {
+func Cast(sheet string, row, column int, meta *fieldMeta, v string) interface{} {
 	if v == "" {
 		v = meta.DataDefault
 	}
 
-	// 枚举转换为int32
-	if enumMap, ok := GetXlsxStructHub().Enum[meta.DataType]; ok {
-		enumMeta := enumMap[v]
+	if meta.IsSlice() {
+		return sliceCast(sheet, row, column, v, meta)
+	}
+
+	// 枚举转换
+	if enumMeta, ok := GetXlsxStructHub().GetEnumMeta(meta.DataType, v); ok {
+		if enumMeta == nil {
+			log.Printf("未知的枚举类型 sheet:%v row:%d column:%d enum:%v value:%v \n", sheet, row, column, meta.DataType, v)
+			return 0
+		}
 		return cast.ToInt32(enumMeta.DataDefault)
 	}
 
-	if meta.IsSlice() {
-		return sliceCast(v, meta)
-	}
 	switch meta.DataType {
 	case "int":
 		return cast.ToInt32(v)
@@ -40,12 +44,14 @@ func Cast(meta *fieldMeta, v string) interface{} {
 		return cast.ToFloat64(v)
 	case "string":
 		return v
+	case "bool":
+		return cast.ToBool(v)
 	default:
-		return structCast(v, meta.DataType)
+		return structCast(sheet, row, column, v, meta.DataType)
 	}
 }
 
-func sliceCast(data string, meta *fieldMeta) *gabs.Container {
+func sliceCast(sheet string, row, column int, data string, meta *fieldMeta) *gabs.Container {
 	if data == "" {
 		return nil
 	}
@@ -55,7 +61,7 @@ func sliceCast(data string, meta *fieldMeta) *gabs.Container {
 	copyGlobalCellTable := meta.Copy()
 	copyGlobalCellTable.DataSlicing = ""
 	for _, value := range values {
-		v := Cast(copyGlobalCellTable, value)
+		v := Cast(sheet, row, column, copyGlobalCellTable, value)
 		if err := array.ArrayAppend(v); err != nil {
 			log.Fatal(data, err)
 			return nil
@@ -69,21 +75,25 @@ func sliceCast(data string, meta *fieldMeta) *gabs.Container {
 // @param value
 // @param structName
 // @return string
-func structCast(data string, structName string) *gabs.Container {
+func structCast(sheet string, row, column int, data string, structName string) *gabs.Container {
 	if data == "" {
 		return nil
 	}
+	a := GetXlsxStructHub()
+	_ = a
 	jsonStruct := gabs.New()
 	fieldValues := strings.Split(data, ",")
 	for _, fieldValue := range fieldValues {
 		infos := strings.Split(fieldValue, ":")
 		if len(infos) < 2 {
-			log.Fatalf("structCast name:%v value:%v\n", structName, fieldValue)
+			log.Fatalf("structCast sheet:%v row:%d column:%d name:%v value:%v\n", sheet, row, column, structName, fieldValue)
 		}
 		fieldName := infos[0]
 		fieldData := infos[1]
+		s := GetXlsxStructHub().Struct
+		_ = s
 		_meta := GetXlsxStructHub().GetMeta(structName, fieldName)
-		v := Cast(_meta, fieldData)
+		v := Cast(sheet, row, column, _meta, fieldData)
 		if _, err := jsonStruct.SetP(v, _meta.ObjName); err != nil {
 			log.Fatal(structName, data, err)
 		}

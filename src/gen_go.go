@@ -35,6 +35,7 @@ func GenGoCode() {
 		if v, ok := xlsxType2ProtoTypeMap[t]; ok {
 			t = v
 		}
+		sheet = CamelStr(sheet)
 		tplParam.List = append(tplParam.List, &GenStruct{Name: sheet, Type: t})
 	}
 	_ = MkDirAll(tmpOutGoBeanFile)

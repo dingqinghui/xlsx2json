@@ -51,7 +51,7 @@ var (
 func GetXlsxStructHub() *XlsxStructHub {
 	xlsxHubOnce.Do(func() {
 		xlsxHub = &XlsxStructHub{
-			Enum:        make(map[string]map[string]*fieldMeta),
+			Enum:        make(map[string][]*fieldMeta),
 			Struct:      make(map[string]map[string]*fieldMeta),
 			TableHeader: make(map[string]map[string]*fieldMeta),
 			dataChan:    make(chan *fieldMeta),
@@ -62,7 +62,7 @@ func GetXlsxStructHub() *XlsxStructHub {
 }
 
 type XlsxStructHub struct {
-	Enum        map[string]map[string]*fieldMeta // 所有的枚举
+	Enum        map[string][]*fieldMeta          // 所有的枚举
 	Struct      map[string]map[string]*fieldMeta // 所有的结构体
 	TableHeader map[string]map[string]*fieldMeta // 所有的表头都定义
 	dataChan    chan *fieldMeta
@@ -126,10 +126,10 @@ func (x *XlsxStructHub) receiveChan() {
 		case LineEnum:
 			// 枚举
 			// XlsxStructHub.keyType["EItemType"] = row["枚举"]  or XlsxStructHub.keyType["ItemConfig"] = row["结构"]
-			if _, ok := x.Enum[cv.ObjType]; !ok {
-				x.Enum[cv.ObjType] = make(map[string]*fieldMeta)
-			}
-			x.Enum[cv.ObjType][cv.ObjDescribe] = cv
+			//if _, ok := x.Enum[cv.ObjType]; !ok {
+			//	x.Enum[cv.ObjType] = make(map[string]*fieldMeta)
+			//}
+			x.Enum[cv.ObjType] = append(x.Enum[cv.ObjType], cv)
 		case LineStruct:
 			// 结构,表头
 			if _, ok := x.Struct[cv.ObjType]; !ok {
@@ -160,6 +160,7 @@ func (x *XlsxStructHub) readTableStruct(filepath string) {
 	var firstRow []string
 	// 获取所有的表单
 	for _, sheetName := range f.GetSheetList() {
+
 		// @Type开头
 		if !isStructMetaSheet(sheetName) {
 			continue
@@ -218,8 +219,11 @@ func (x *XlsxStructHub) readSheetHead(xlsx *excelize.File, sheet string) {
 		return
 	}
 	t := "int"
-	if !isAnnotateTag(rows[1][0]) {
-		t = rows[1][0]
+	if !isAnnotateTag(rows[1][0]) && rows[1][0] != "" {
+		switch rows[1][0] {
+		case "string":
+			t = rows[1][0]
+		}
 	}
 
 	idField := &fieldMeta{
@@ -238,8 +242,31 @@ func (x *XlsxStructHub) GetMeta(structName, fieldName string) *fieldMeta {
 	if sMeta == nil {
 		return nil
 	}
-	v, _ := sMeta[fieldName]
-	return v
+	for _, meta := range sMeta {
+		if meta.ObjDescribe == fieldName {
+			return meta
+		}
+		if meta.ObjName == fieldName {
+			return meta
+		}
+	}
+	return nil
+}
+func (x *XlsxStructHub) GetEnumMeta(enumName string, enumValue string) (*fieldMeta, bool) {
+	if enumMap, ok := x.Enum[enumName]; ok {
+		for _, meta := range enumMap {
+			if meta.ObjDescribe == enumValue {
+				return meta, ok
+			}
+			if meta.ObjName == enumValue {
+				return meta, ok
+			}
+		}
+		return nil, ok
+	} else {
+		return nil, ok
+	}
+
 }
 
 func genFieldMeta(convert, row []string) *fieldMeta {
