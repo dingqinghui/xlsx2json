@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+
 	path := flag.String("c", "./config.json", "config path")
 	flag.Parse()
 
