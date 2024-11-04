@@ -1,0 +1,19 @@
+syntax = "proto3";
+option go_package = ".;staticdata";
+package Game;
+
+
+//TestTable
+message TestTable
+{
+	int32 ID = 1; //ID
+	int32 Enum1 = 2; //枚举字段
+	TestStruct Struct1 = 3; //结构体字段
+	repeated int32 Array1 = 4; //数组字段
+}
+//TestStruct
+message TestStruct
+{
+	int32 Field1 = 1; //Field1
+	int32 Field2 = 2; //Field2
+}

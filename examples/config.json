@@ -1,0 +1,8 @@
+{
+  "XlsxInputPath"  : [
+    "../examples/xlsx"
+  ],
+  "JsonOutputPath"  : "../examples/output",
+  "GoOutputPath"    : "../examples/output",
+  "ProtoOutputPath" : "../examples/output"
+}
